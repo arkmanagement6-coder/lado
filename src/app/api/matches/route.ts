@@ -93,9 +93,6 @@ function calculateMatch(userProfile: any, targetProfile: any) {
 export async function GET(req: Request) {
   try {
     const authUser = getAuthUser(req);
-    if (!authUser) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Parse search parameters
     const { searchParams } = new URL(req.url);
@@ -113,15 +110,18 @@ export async function GET(req: Request) {
     const premiumOnly = searchParams.get('premiumOnly') === 'true';
     const verifiedOnly = searchParams.get('verifiedOnly') === 'true';
 
-    // Fetch active user profile
-    const userProfile = await db.profile.findUnique({ where: { id: authUser.userId } });
-    if (!userProfile) {
-      return NextResponse.json({ error: 'Please set up your profile first' }, { status: 400 });
+    // Fetch active user profile if authenticated
+    let userProfile = null;
+    if (authUser) {
+      userProfile = await db.profile.findUnique({ where: { id: authUser.userId } });
+      if (!userProfile) {
+        return NextResponse.json({ error: 'Please set up your profile first' }, { status: 400 });
+      }
     }
 
     // Determine target gender to show
-    // By default, show opposite gender
-    const targetGender = gender || (userProfile.gender === 'Bride' ? 'Groom' : 'Bride');
+    // By default, show opposite gender, or default to Bride/Groom parameter
+    const targetGender = gender || (userProfile ? (userProfile.gender === 'Bride' ? 'Groom' : 'Bride') : 'Bride');
 
     // Fetch potential matches
     const allProfiles = await db.profile.findMany();
@@ -129,7 +129,7 @@ export async function GET(req: Request) {
 
     // Map profiles to their corresponding user account information
     let matches = allProfiles
-      .filter((p: any) => p.id !== authUser.userId) // Exclude current user
+      .filter((p: any) => !authUser || p.id !== authUser.userId) // Exclude current user if logged in
       .map((p: any) => {
         const u = allUsers.find((user: any) => user.id === p.id);
         return {
@@ -185,7 +185,9 @@ export async function GET(req: Request) {
     // Map calculations
     let results = matches.map((target: any) => {
       const targetAge = getAge(target.dob);
-      const compatibility = calculateMatch(userProfile, target);
+      const compatibility = userProfile
+        ? calculateMatch(userProfile, target)
+        : { score: 85, label: "Highly Compatible", details: ["Premium Match"] };
       return {
         ...target,
         age: targetAge,
