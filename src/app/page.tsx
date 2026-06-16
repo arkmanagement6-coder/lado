@@ -278,21 +278,21 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid lg:grid-cols-12 gap-12 items-center">
           {/* Tagline Column */}
-          <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
+          <div className="lg:col-span-6 glass-panel p-8 sm:p-10 rounded-3xl border border-primary/10 shadow-2xl max-w-xl mx-auto lg:mx-0 text-center lg:text-left space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" /> 100% Verified Profiles
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-none text-foreground dark:text-white">
+            <h1 className="text-4xl sm:text-5xl lg:text-5xl font-extrabold tracking-tight leading-tight text-foreground dark:text-white">
               Finding <span className="gradient-text">Perfect Matches</span>, Building Lifelong Relationships.
             </h1>
-            <p className="text-lg text-foreground/80 dark:text-white/80 max-w-xl mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg text-foreground/90 dark:text-white/90">
               India's premium and trusted matrimony portal. Begin your journey toward finding your perfect soulmate backed by state-of-the-art security and AI compatibility scoring.
             </p>
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-4 pt-2">
               <Link href="/register" className="h-12 px-8 flex items-center gap-2 rounded-full gradient-bg text-white font-semibold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
                 Get Started <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="#stories" className="h-12 px-8 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-foreground/15 text-foreground font-semibold hover:bg-white/20 transition-all">
+              <Link href="#stories" className="h-12 px-8 flex items-center justify-center rounded-full bg-primary/5 hover:bg-primary/10 backdrop-blur-sm border border-primary/20 text-primary font-semibold transition-all">
                 Success Stories
               </Link>
             </div>
