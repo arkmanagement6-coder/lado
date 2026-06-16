@@ -1,0 +1,271 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String         @id @default(uuid())
+  name             String
+  email            String         @unique
+  passwordHash     String
+  mobileNumber     String?
+  role             String         @default("CUSTOMER") // ADMIN, CUSTOMER, PREMIUM, RELATIONSHIP_MANAGER, SUPPORT
+  isVerified       Boolean        @default(false)
+  status           String         @default("ACTIVE") // ACTIVE, SUSPENDED
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  otp              String?
+  otpExpiry        DateTime?
+  twoFactorEnabled Boolean        @default(false)
+  deviceHistory    String?        // Serialized JSON for log in history
+  
+  profile          Profile?
+  interestsSent    Interest[]     @relation("InterestsSent")
+  interestsReceived Interest[]    @relation("InterestsReceived")
+  notifications    Notification[]
+  transactions     Transaction[]
+}
+
+model Profile {
+  id                   String   @id
+  user                 User     @relation(fields: [id], references: [id], onDelete: Cascade)
+  
+  // Basic Information
+  gender               String?  // Bride, Groom
+  dob                  String?
+  maritalStatus        String?
+  height               String?
+  weight               String?
+  bloodGroup           String?
+  
+  // Religion Details
+  religion             String?
+  caste                String?
+  subCaste             String?
+  motherTongue         String?
+  gothra               String?
+  
+  // Education & Career
+  highestQualification String?
+  college              String?
+  occupation           String?
+  annualIncome         Float?
+  
+  // Family Details
+  fatherOccupation     String?
+  motherOccupation     String?
+  brothers             Int?     @default(0)
+  sisters              Int?     @default(0)
+  familyType           String?  // Joint, Nuclear
+  familyStatus         String?  // Middle Class, Upper Middle Class, Rich, Elite
+  
+  // Lifestyle
+  diet                 String?  // Veg, Non-Veg, Eggetarian, Vegan
+  smoking              String?  // No, Yes, Occasionally
+  drinking             String?  // No, Yes, Occasionally
+  hobbies              String?  // Comma-separated list
+  
+  // Location
+  country              String?
+  state                String?
+  city                 String?
+  address              String?
+  
+  // Media Uploads
+  profilePhoto         String?
+  galleryPhotos        String?  // Comma-separated or JSON list of URLs
+  horoscope            String?  // Horoscope file URL or text details
+  idProof              String?  // ID file URL for verification
+  
+  // Partner Preferences
+  prefAgeFrom          Int?     @default(18)
+  prefAgeTo            Int?     @default(50)
+  prefHeightFrom       String?
+  prefHeightTo         String?
+  prefReligion         String?  // Comma-separated or 'Any'
+  prefCaste            String?  // Comma-separated or 'Any'
+  prefEducation        String?
+  prefOccupation       String?
+  prefLocation         String?
+  
+  // Extra Features
+  bio                  String?  @db.Text
+  voiceBio             String?  // URL of voice recording
+  videoIntroduction    String?  // URL of video introduction
+  photoPrivacy         String   @default("PUBLIC") // PUBLIC, HIDDEN, PREMIUM_ONLY
+  completionPercent    Int      @default(0)
+  viewsCount           Int      @default(0)
+  profileBoost         Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Interest {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     String   @default("SENT") // SENT, ACCEPTED, DECLINED, CANCELLED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("InterestsSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("InterestsReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String?  @db.Text
+  imageUrl   String?
+  voiceUrl   String?
+  isSeen     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // INTEREST_RECEIVED, MATCH_FOUND, CHAT_MESSAGE, SUBSCRIPTION_EXPIRY, PROFILE_VIEWED
+  title     String
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planName         String   // Basic, Premium, Elite
+  amount           Float
+  currency         String   @default("INR")
+  paymentGateway   String   // Razorpay, Stripe
+  gatewayPaymentId String
+  status           String   @default("SUCCESS") // SUCCESS, FAILED, REFUNDED
+  couponCode       String?
+  invoiceNumber    String
+  createdAt        DateTime @default(now())
+}
+
+model SuccessStory {
+  id          String   @id @default(uuid())
+  coupleImage String
+  brideName   String
+  groomName   String
+  weddingDate String
+  story       String   @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model Blog {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  content   String   @db.Text
+  category  String   // Marriage Tips, Relationship Advice, Wedding Planning, Success Stories, Horoscope
+  image     String
+  author    String   @default("Admin")
+  createdAt DateTime @default(now())
+}
+
+model ParentProfile {
+  id          String   @id @default(uuid())
+  parentId    String   @unique
+  childId     String   @unique
+  relation    String   @default("Father") // Father, Mother, Guardian
+  createdAt   DateTime @default(now())
+}
+
+model HoroscopeReport {
+  id           String   @id @default(uuid())
+  profileId    String   @unique
+  nakshatra    String
+  rashi        String
+  charana      Int      @default(1)
+  gunMilan     Int      @default(24) // Out of 36
+  isManglik    Boolean  @default(false)
+  dosha        String?  // Nadi Dosha, Bhakoot Dosha, or None
+  marriagePrediction String? @db.Text
+  luckyDates   String?  // Comma separated dates
+  createdAt    DateTime @default(now())
+}
+
+model AICompatibilityReport {
+  id                 String   @id @default(uuid())
+  userOneId          String
+  userTwoId          String
+  overallMatch       Int      @default(80)
+  personalityMatch   Int      @default(80)
+  lifestyleMatch     Int      @default(80)
+  educationMatch     Int      @default(80)
+  careerMatch        Int      @default(80)
+  religionMatch      Int      @default(80)
+  familyMatch        Int      @default(80)
+  emotionalMatch     Int      @default(80)
+  communicationStyle String?  // Harmonious, Analytical, Emotional, etc
+  matchingAnalysis   String?  @db.Text
+  createdAt          DateTime @default(now())
+
+  @@unique([userOneId, userTwoId])
+}
+
+model VendorProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  companyName     String
+  category        String   // Photographer, Makeup Artist, Banquet Hall, Decorator, Pandit, Caterer
+  packagesDetails String?  @db.Text // Serialized JSON or text of options
+  portfolioPhotos String?  @db.Text // Comma separated URLs
+  location        String
+  contactNumber   String?
+  rating          Float    @default(5.0)
+  isVerified      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+}
+
+model VendorLead {
+  id              String   @id @default(uuid())
+  userId          String
+  vendorProfileId String
+  status          String   @default("PENDING") // PENDING, CONTACTED, BOOKED, CANCELLED
+  eventDate       String?
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+}
+
+model MeetingSchedule {
+  id          String   @id @default(uuid())
+  hostId      String
+  guestId     String
+  meetingType String   @default("VIDEO") // VIDEO, COFFEE, FAMILY
+  scheduledAt String
+  status      String   @default("PENDING") // PENDING, APPROVED, COMPLETED, CANCELLED
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  userId      String
+  subject     String
+  category    String   // Profile Setup, Billing, Safety, Tech Issue, Feedback
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model Referral {
+  id           String   @id @default(uuid())
+  inviterId    String
+  inviteeId    String
+  status       String   @default("PENDING") // PENDING, COMPLETED
+  rewardAmount Float    @default(0.0)
+  walletBalance Float   @default(0.0)
+  createdAt    DateTime @default(now())
+}
