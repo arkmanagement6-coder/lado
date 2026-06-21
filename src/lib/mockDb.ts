@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 // Define the schema types for local JS data
 export interface User {
@@ -253,7 +254,10 @@ interface DBData {
   referrals: Referral[];
 }
 
-const DB_FILE = path.join(process.cwd(), 'lado_dev_db.json');
+const isServerless = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const DB_FILE = isServerless 
+  ? path.join(os.tmpdir(), 'lado_dev_db.json')
+  : path.join(process.cwd(), 'lado_dev_db.json');
 
 // Initial seed data
 const getInitialData = (): DBData => {
