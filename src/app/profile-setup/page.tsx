@@ -166,6 +166,26 @@ export default function ProfileSetupPage() {
     updateField(field, mockUrl);
   };
 
+  // Handle real file uploads (reads as Base64 data URLs)
+  const handleRealUpload = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Limit to 3MB to keep base64 strings reasonable
+    if (file.size > 3 * 1024 * 1024) {
+      alert("File size should be less than 3MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        updateField(field, reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Save full profile details to Backend
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -692,17 +712,40 @@ export default function ProfileSetupPage() {
                         <h4 className="text-sm font-bold">Profile Photo</h4>
                         <p className="text-[10px] opacity-65">Displays on search pages. High resolution face shot.</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         {formData.profilePhoto ? (
-                          <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                          <div className="flex items-center gap-2">
+                            {formData.profilePhoto.startsWith('data:') && (
+                              <img src={formData.profilePhoto} className="w-8 h-8 rounded-full object-cover border border-primary/20" alt="Preview" />
+                            )}
+                            <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                            <button
+                              type="button"
+                              onClick={() => updateField('profilePhoto', '')}
+                              className="text-[10px] text-red-500 hover:text-red-700 underline font-semibold ml-1 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleMockUpload('profilePhoto', 'Profile Photo')}
-                            className="h-9 px-4 rounded-xl bg-primary text-white text-xs font-bold flex items-center gap-2 hover:opacity-90 cursor-pointer"
-                          >
-                            <Upload className="w-3.5 h-3.5" /> Select File
-                          </button>
+                          <div className="flex gap-2 items-center">
+                            <label className="h-9 px-4 rounded-xl bg-primary text-white text-xs font-bold flex items-center gap-2 hover:opacity-90 cursor-pointer">
+                              <Upload className="w-3.5 h-3.5" /> Select File
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={(e) => handleRealUpload(e, 'profilePhoto')} 
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleMockUpload('profilePhoto', 'Profile Photo')}
+                              className="h-9 px-3 rounded-xl border border-primary/20 text-foreground/70 hover:bg-primary/5 text-[10px] font-semibold cursor-pointer"
+                            >
+                              Auto Add
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -713,17 +756,40 @@ export default function ProfileSetupPage() {
                         <h4 className="text-sm font-bold">Gallery Photos (Optional)</h4>
                         <p className="text-[10px] opacity-65">Additional lifestyle/family photographs.</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         {formData.galleryPhotos ? (
-                          <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                          <div className="flex items-center gap-2">
+                            {formData.galleryPhotos.startsWith('data:') && (
+                              <img src={formData.galleryPhotos} className="w-8 h-8 rounded-full object-cover border border-primary/20" alt="Preview" />
+                            )}
+                            <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                            <button
+                              type="button"
+                              onClick={() => updateField('galleryPhotos', '')}
+                              className="text-[10px] text-red-500 hover:text-red-700 underline font-semibold ml-1 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleMockUpload('galleryPhotos', 'Gallery Photo')}
-                            className="h-9 px-4 rounded-xl border border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center gap-2 cursor-pointer"
-                          >
-                            <Upload className="w-3.5 h-3.5" /> Select Files
-                          </button>
+                          <div className="flex gap-2 items-center">
+                            <label className="h-9 px-4 rounded-xl border border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center gap-2 cursor-pointer">
+                              <Upload className="w-3.5 h-3.5" /> Select Files
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={(e) => handleRealUpload(e, 'galleryPhotos')} 
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleMockUpload('galleryPhotos', 'Gallery Photo')}
+                              className="h-9 px-3 rounded-xl border border-primary/20 text-foreground/70 hover:bg-primary/5 text-[10px] font-semibold cursor-pointer"
+                            >
+                              Auto Add
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -734,17 +800,37 @@ export default function ProfileSetupPage() {
                         <h4 className="text-sm font-bold">Horoscope / Kundali (Optional)</h4>
                         <p className="text-[10px] opacity-65">PDF/Image file showing your birth charts.</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         {formData.horoscope ? (
-                          <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                            <button
+                              type="button"
+                              onClick={() => updateField('horoscope', '')}
+                              className="text-[10px] text-red-500 hover:text-red-700 underline font-semibold ml-1 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleMockUpload('horoscope', 'Kundali Document')}
-                            className="h-9 px-4 rounded-xl border border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center gap-2 cursor-pointer"
-                          >
-                            <Upload className="w-3.5 h-3.5" /> Upload PDF
-                          </button>
+                          <div className="flex gap-2 items-center">
+                            <label className="h-9 px-4 rounded-xl border border-primary text-primary hover:bg-primary/5 text-xs font-bold flex items-center gap-2 cursor-pointer">
+                              <Upload className="w-3.5 h-3.5" /> Upload File
+                              <input 
+                                type="file" 
+                                accept="image/*,application/pdf" 
+                                className="hidden" 
+                                onChange={(e) => handleRealUpload(e, 'horoscope')} 
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleMockUpload('horoscope', 'Kundali Document')}
+                              className="h-9 px-3 rounded-xl border border-primary/20 text-foreground/70 hover:bg-primary/5 text-[10px] font-semibold cursor-pointer"
+                            >
+                              Auto Add
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -755,17 +841,37 @@ export default function ProfileSetupPage() {
                         <h4 className="text-sm font-bold">Aadhaar Card / Passport (Required for Verification)</h4>
                         <p className="text-[10px] opacity-65">Confidential. Used solely for verification. Verification earns a profile badge.</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         {formData.idProof ? (
-                          <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-green-600 font-bold flex items-center gap-1"><Check className="w-4 h-4" /> Added</span>
+                            <button
+                              type="button"
+                              onClick={() => updateField('idProof', '')}
+                              className="text-[10px] text-red-500 hover:text-red-700 underline font-semibold ml-1 cursor-pointer"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleMockUpload('idProof', 'Government ID Proof')}
-                            className="h-9 px-4 rounded-xl bg-primary text-white text-xs font-bold flex items-center gap-2 hover:opacity-90 cursor-pointer"
-                          >
-                            <Upload className="w-3.5 h-3.5" /> Select ID Proof
-                          </button>
+                          <div className="flex gap-2 items-center">
+                            <label className="h-9 px-4 rounded-xl bg-primary text-white text-xs font-bold flex items-center gap-2 hover:opacity-90 cursor-pointer">
+                              <Upload className="w-3.5 h-3.5" /> Select ID Proof
+                              <input 
+                                type="file" 
+                                accept="image/*,application/pdf" 
+                                className="hidden" 
+                                onChange={(e) => handleRealUpload(e, 'idProof')} 
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleMockUpload('idProof', 'Government ID Proof')}
+                              className="h-9 px-3 rounded-xl border border-primary/20 text-foreground/70 hover:bg-primary/5 text-[10px] font-semibold cursor-pointer"
+                            >
+                              Auto Add
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
